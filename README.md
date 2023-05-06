@@ -83,13 +83,13 @@ Now that it's clear we need to create a non-root user, we can just add one with 
 
 When new user is created, by default, it's `UID` will be the first available id, greater than 999, because `0-999` range is reserved for system accounts. The caveat here lies in the way `adduser` checks which `UID` is available.
 
-You might think that `adduser` asks the kernel which `UID`'s are not already in use, and then chooses the smallest one from them. But that's not the case. Instead it refers to a `/etc/passwd` file, which is just a plain-text list of all registered users, complete with their usernames, passwords, `UID`'s and more. This file is not controlled by the kernel, but by a third-party software, and it exists simply for our convenience, so we can use named users instead of a bunch of numbers. It's important to realize that `/etc/passwd`, doesn't have to contain all the users present on the system.
+You might think that `adduser` asks the kernel which `UID`'s are not already in use, and then chooses the smallest one from them. But that's not the case. Instead it refers to a `/etc/passwd` file, which is just a plain-text list of all registered users, complete with their usernames, passwords, `UID`'s and more. This file is not controlled by the kernel, but by an external tool, and it exists simply for our convenience, so we can use named users instead of a bunch of numbers. It's important to realize that `/etc/passwd`, doesn't have to contain all the users present on the system.
 
 In a way there isn't a place where all users on the system are stored. That's because to kernel, user and group ID's are just numbers attached to a process, which are used to see if the process is allowed to read, write or execute a file, that belongs to specific owner (`UID`) and group (`GID`). That's all kernel knows and cares about - `UID`'s and `GID`'s. It doesn't know any usernames.
 
 How do `kernal` and `passwd` interact with each other?  When you log in and give your username, a program, running as root, takes the username and looks up the UID in `/etc/passwd`, asks for the password and checks it. If all goes well, the program changes to that `UID`/`GID` pair and executes the user's login shell.
 
-Normally, all of this works perfectally well, and you can only map one `UID` to only one username. However, because `/etc/passwd` isn't maintained by the kernel, but by a third-party program, operating system within the docker container will come with it's own `/etc/passwd`, and a second mapping to the same `UID` is possible, and it's exactly what happens in practice if you are not careful.
+Normally, all of this works perfectally well, and you can only map one `UID` to only one username. However, because `/etc/passwd` isn't maintained by the kernel, but by an external tool, operating system within the docker container will come with it's own `/etc/passwd`, and a second mapping to the same `UID` is possible, and it's exactly what happens in practice if you are not careful.
 
 Let's look at an example. Say we create a new Docker image from the following `Dockerfile`
 ```
