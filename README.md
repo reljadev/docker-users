@@ -62,18 +62,16 @@ unshare --user --map-root-user /bin/bash
 `--map-root-user` - map `UID` of user which created namespace to root user inside namespace
 
 Once inside namespace, we can check that we are indeed root, by running `whoami`, or `id` commands. 
-```
-photo create-namespace.png
-```
+
+![Create namespace](https://github.com/reljadev/docker-users/blob/master/create-namespace.png?raw=true)
+
 However, that doesn't mean that we have root privileges on the host system. That's because our root user is mapped to the user which created the namespace - `reljinm` user. This means that we only have `reljinm` user privileges, which can be confirmed by trying to remove `/bin/bash` for example.
-```
-photo remove-bash.png
-```
+
+![Remove bash](https://github.com/reljadev/docker-users/blob/master/remove-bash.png?raw=true)
 
 In addittion any file or process created within the namespace will have `root` ownership inside the namespace, however, outside the container the owner will again be `reljinm` user.
-```
-photo file-owner-2.png
-```
+
+![File owner](https://github.com/reljadev/docker-users/blob/master/file-owner-2.png?raw=true)
 
 #### Users within docker container
 
@@ -103,13 +101,13 @@ USER example
 CMD ["sleep", "infinity"]
 ```
 As you can see, `example` user ran the `sleep` command, and we can check that indeed that process is owned by `example` user inside the container.
-```
-photo process-in-container-2.png
-```
+
+![Proces in container](https://github.com/reljadev/docker-users/blob/master/process-in-container-2.png?raw=true)
+
 On docker host then, you would expect to see just the `UID` of `example` user as the owner of that process, since `example` doesn't exist on host. However, you'd be wrong.
-```
-photo process-on-host.png
-```
+
+![Proces on host](https://github.com/reljadev/docker-users/blob/master/process-on-host.png?raw=true)
+
 What's happening here is that `adduser` within the container checks `/etc/passwd` within the container, and since this is a brand new os, and no users are registered yet, first avaiable `UID` is going to be `1000`. Now we have a user `example` with id `1000` within the container, but since docker doesn't use `User namespaces` that's the same user with id `1000` as on the host, which in my case already exists and has name `pomocnik`. This is a problem, because `pomocnik` might have elevated permission rights, and `example` will have those same rights. In order to avoid that, and trully create a new, previously non-existent user, we should always set `UID` when creating a user, and the value should be high, above `10,000`. This way, we know that id won't overlap with id's of existing users.
 
 #### Implicit `root` rights
